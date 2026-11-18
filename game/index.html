@@ -3,17 +3,101 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
+<title>Puerto Alba — an open-world crime game</title>
+<link rel="icon" href="data:,">
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a1220; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #eef1f5; }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  /* Read aloud, never shown: the status line screen readers announce. */
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .hidden { display: none !important; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .panel { background: rgba(10, 16, 28, 0.72); border: 1px solid rgba(255,255,255,0.18); border-radius: 10px; padding: 8px 12px; }
+  #top-left { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; }
+  #hp-wrap { display: flex; align-items: center; gap: 8px; }
+  #hp-bar { width: 180px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 7px; overflow: hidden; }
+  #hp-fill { height: 100%; width: 100%; background: #37d67a; }
+  #money { font-size: 20px; font-weight: 700; color: #37d67a; }
+  #stars { font-size: 22px; letter-spacing: 2px; }
+  #clock { font-size: 16px; }
+  #weapon { font-size: 14px; color: #cfd6e4; }
+  #top-right { position: absolute; top: 12px; right: 12px; text-align: right; }
+  #minimap { width: 168px; height: 168px; border: 2px solid rgba(255,255,255,0.5); border-radius: 8px; background: #0d2b3a; }
+  #mission-box { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 320px; }
+  #mission-title { font-size: 17px; font-weight: 700; color: #ffd23f; }
+  #mission-objective { font-size: 14px; color: #eef1f5; }
+  #banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); text-align: center; background: rgba(10,16,28,0.85); border: 1px solid #ffd23f; border-radius: 12px; padding: 16px 28px; max-width: 560px; }
+  #banner-title { font-size: 26px; font-weight: 800; color: #ffd23f; }
+  #banner-text { font-size: 15px; margin-top: 6px; line-height: 1.4; }
+  #prompt { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%); font-size: 15px; background: rgba(10,16,28,0.75); padding: 6px 14px; border-radius: 8px; }
+  #log { position: absolute; bottom: 16px; left: 12px; font-size: 13px; color: #cfd6e4; }
+  #log div { background: rgba(10,16,28,0.6); padding: 2px 8px; border-radius: 6px; margin-top: 3px; display: inline-block; }
+  #crosshair { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 22px; color: rgba(255,255,255,0.85); text-shadow: 0 0 4px #000; }
+  .screen { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, rgba(8,20,36,0.88), rgba(120,50,20,0.72)); }
+  .card { max-width: 640px; margin: 16px; background: rgba(8,14,26,0.92); border: 1px solid rgba(255,210,63,0.5); border-radius: 16px; padding: 28px 32px; }
+  .card h1 { margin: 0 0 4px; font-size: 44px; color: #ffd23f; letter-spacing: 1px; }
+  .card h2 { margin: 0 0 12px; font-size: 18px; font-weight: 400; color: #ffb37a; }
+  .card p, .card li { font-size: 15px; line-height: 1.5; color: #dfe5ee; }
+  .card ul { padding-left: 20px; }
+  .card .cta { margin-top: 16px; font-size: 17px; font-weight: 700; color: #37d67a; }
+  kbd { background: #222; border: 1px solid #555; border-radius: 4px; padding: 1px 6px; font-size: 13px; }
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<canvas id="game" aria-label="Puerto Alba: drive and walk around a coastal city, take jobs, outrun the police"></canvas>
 <p id="status" role="status" aria-live="polite"></p>
+
+<div id="hud" class="hidden">
+  <div id="top-left">
+    <div id="hp-wrap"><span>HP <b id="hp-text">100</b></span><div id="hp-bar"><div id="hp-fill"></div></div></div>
+    <div id="money">$250</div>
+    <div id="stars">☆☆☆☆☆</div>
+    <div id="clock">07:40</div>
+    <div id="weapon">Pistol · ∞</div>
+  </div>
+  <div id="mission-box" class="panel">
+    <div id="mission-title">Mission 1: First Drop</div>
+    <div id="mission-objective">Drive to the north marina marker</div>
+  </div>
+  <div id="top-right"><canvas id="minimap" width="168" height="168"></canvas></div>
+  <div id="banner" class="hidden"><div id="banner-title"></div><div id="banner-text"></div></div>
+  <div id="prompt"></div>
+  <div id="log"></div>
+  <div id="crosshair" class="hidden">+</div>
+</div>
+
+<div id="screen-title" class="screen">
+  <div class="card">
+    <h1>PUERTO ALBA</h1>
+    <h2>An open-world crime story on a sun-soaked coast. Original city, original crew — no Rockstar, no GTA.</h2>
+    <p>You are <b>Rico Alba</b>, a driver for Marisol Vega's crew. The Alba police want you, rival crews want you gone, and seven jobs stand between you and the big score. Steal cars, lose the heat, clear the docks — and don't get busted.</p>
+    <ul>
+      <li><kbd>W A S D</kbd> move / drive &nbsp;·&nbsp; <kbd>Shift</kbd> run &nbsp;·&nbsp; drag mouse to orbit the camera</li>
+      <li><kbd>E</kbd> enter / exit a car &nbsp;·&nbsp; <kbd>Click</kbd> shoot &nbsp;·&nbsp; <kbd>F</kbd> punch &nbsp;·&nbsp; <kbd>1</kbd>/<kbd>2</kbd> fists / pistol</li>
+      <li><kbd>P</kbd> pause &nbsp;·&nbsp; <kbd>M</kbd> mute &nbsp;·&nbsp; follow the gold beacon — the minimap shows you, the cops and the job</li>
+    </ul>
+    <p>7 story missions · traffic &amp; pedestrians · wanted stars 1–5 · police chases &amp; helicopter · money, saves and a living city, day to sunset to night.</p>
+    <p class="cta">Press Space or click to start — your story progress saves in this browser.</p>
+  </div>
+</div>
+
+<div id="screen-pause" class="screen hidden">
+  <div class="card">
+    <h1>Paused</h1>
+    <p>Puerto Alba waits for no one — except right now. Your progress is saved.</p>
+    <p class="cta">Press P to keep driving.</p>
+  </div>
+</div>
+
+<div id="screen-over" class="screen hidden">
+  <div class="card">
+    <h1>Busted</h1>
+    <p>The Alba police finally caught up with Rico. The crew will bail you out — but the heat is real.</p>
+    <p id="over-stats"></p>
+    <p class="cta">Press Space or click to run it back.</p>
+  </div>
+</div>
+
+<script src="./vendor/three.min.js"></script>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

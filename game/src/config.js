@@ -1,61 +1,46 @@
-// Every tuning number and colour in one place. The playfield is a fixed 1280x720 logical area;
-// the renderer scales it to the window, so no rule below depends on the screen size.
+// Puerto Alba — tuning constants. One coastal city, one grid, one sun.
+export const CITY = {
+  blocks: 7,          // blocks per side
+  block: 46,          // block size in metres
+  road: 14,           // road width
+  size: 7 * 46 + 8 * 14, // full city extent (434)
+  beachX: 434 / 2 + 26,  // sand strip east of the grid
+  harborZ: 434 / 2 + 18, // docks south of the grid
+};
 
-export const FIELD = { width: 1280, height: 720, groundY: 664 };
-
-/** The simulation's fixed step, in seconds: 60 updates a second whatever the display's rate. */
 export const STEP = 1 / 60;
+export const SAVE_KEY = 'puerto-alba-save-v1';
+export const BEST_KEY = 'puerto-alba-best-v1';
 
+// Player / car tuning.
 export const PLAYER = {
-  width: 72,
-  height: 24,
-  speed: 560,
-  invulnerable: 1.5,
+  walkSpeed: 7,
+  runSpeed: 11,
+  radius: 0.7,
+  maxHp: 100,
+};
+export const CAR = {
+  accel: 22,
+  brake: 34,
+  maxSpeed: 38,
+  maxReverse: 12,
+  turn: 1.9,
+  drag: 0.6,
 };
 
-export const LIVES = 3;
-
-export const BLOCK = {
-  minWidth: 40,
-  maxWidth: 110,
-  height: 36,
-  speed: 240,
-  speedPerLevel: 30,
-  speedJitter: 90,
-  interval: 0.55,
-  intervalScale: 0.88,
-  minInterval: 0.14,
-  dodgePoints: 1,
+// Wanted: stars 0-5, decay when unseen, heat per crime.
+export const WANTED = {
+  stealCar: 1,
+  hitPed: 1,
+  shoot: 1,
+  killCop: 2,
+  decaySeconds: 26,
 };
 
-export const COIN = {
-  size: 24,
-  speed: 190,
-  speedPerLevel: 14,
-  interval: 1.4,
-  intervalJitter: 0.8,
-  points: 10,
-};
+export const MONEY_START = 250;
+export const DAY_LENGTH = 240; // seconds per full day cycle
 
-/** Seconds of play per level, and the last level: speeds and spawn rates stop growing there. */
-export const LEVEL = { seconds: 12, max: 12 };
-
-/** How many falling things can exist at once; the pool is allocated once, at boot. */
-export const POOL_SIZE = 64;
-
-export const PALETTE = {
-  backdrop: '#11141b',
-  sky: '#1b1f2a',
-  ground: '#2a3040',
-  player: '#4fc3f7',
-  block: '#e5534b',
-  coin: '#f2c94c',
-  panel: '#252b38',
-  text: '#eef1f5',
-  muted: '#8b93a3',
-};
-
-export const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
-
-/** Where the best score is kept between visits (this browser only). */
-export const BEST_KEY = 'block-dodger.best';
+// Mission reward table lives in missions.js; these are the shared knobs.
+export const TRAFFIC_COUNT = 14;
+export const PED_COUNT = 26;
+export const COP_MAX = 5;
